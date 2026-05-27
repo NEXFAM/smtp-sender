@@ -1,0 +1,7 @@
+sender_config.json
+results_*.csv
+send_log_*.log
+recipients.csv
+*.csv
+__pycache__/
+*.py[cod]
