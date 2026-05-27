@@ -1,15 +1,37 @@
 # smtp-sender
 
-An interactive command-line SMTP email sender. Supports multiple providers, saved profiles, HTML/plain-text templates, CSV recipient lists, attachments, retry logic, and per-send result exports.
+A fully interactive command-line SMTP email sender built in Python. Supports multiple providers, saved sending profiles, HTML/plain-text templates, CSV recipient lists, file attachments, retry logic, and timestamped result exports.
+
+**Author:** [NEXFAM](https://github.com/NEXFAM)
+
+---
+
+## Features
+
+- 11 pre-configured SMTP providers (Gmail, Outlook, SendGrid, SES, and more)
+- Named profiles saved locally — no re-entering settings between sessions
+- HTML template files or inline plain-text body
+- Per-recipient placeholder substitution (`{{.FirstName}}`, `{{.Email}}`, etc.)
+- CSV recipient list with preview before sending
+- Quick input modes: single address, comma-separated list, or clipboard paste
+- Optional file attachment on every email
+- Configurable delay between sends (fixed or randomised range)
+- Automatic retry for failed recipients (up to 2 attempts)
+- Timestamped `.log` and `.csv` result files after every campaign
+- Coloured terminal output via [colorama](https://pypi.org/project/colorama/)
+
+---
 
 ## Requirements
 
 - Python 3.7+
-- [colorama](https://pypi.org/project/colorama/)
+- colorama
 
 ```bash
 pip install -r requirements.txt
 ```
+
+---
 
 ## Usage
 
@@ -17,14 +39,16 @@ pip install -r requirements.txt
 python smtp_sender.py
 ```
 
-The tool starts an interactive dashboard. On first run it walks you through creating a new sending profile.
+On first run the tool walks you through creating a sending profile. Subsequent runs open the dashboard where you can load a saved profile and send immediately.
+
+---
 
 ## Supported SMTP Providers
 
 | Provider | Host | Port | Security |
 |---|---|---|---|
 | Gmail | smtp.gmail.com | 465 | SSL |
-| Gmail | smtp.gmail.com | 587 | STARTTLS |
+| Gmail (STARTTLS) | smtp.gmail.com | 587 | STARTTLS |
 | Outlook / Office365 | smtp.office365.com | 587 | STARTTLS |
 | Yahoo | smtp.mail.yahoo.com | 465 / 587 | SSL / STARTTLS |
 | SendGrid | smtp.sendgrid.net | 587 | STARTTLS |
@@ -35,9 +59,11 @@ The tool starts an interactive dashboard. On first run it walks you through crea
 | Zoho | smtp.zoho.com | 465 / 587 | SSL / STARTTLS |
 | Custom | configurable | configurable | SSL / STARTTLS |
 
+---
+
 ## Recipients CSV Format
 
-The CSV must have these columns (with header row):
+The CSV must include a header row with these exact columns:
 
 ```
 FirstName,LastName,Email
@@ -47,60 +73,85 @@ John,Smith,john@example.com
 
 ### Quick input modes
 
-Instead of a file path, you can type:
+When prompted for a CSV path, you can also type a keyword:
 
-- `single` — enter one email address interactively
-- `quick` — enter multiple emails as a comma-separated list
-- `clipboard` — paste emails from the clipboard (newline- or comma-separated)
+| Keyword | Behaviour |
+|---|---|
+| `single` | Enter one email address interactively |
+| `quick` | Enter multiple emails as a comma-separated list |
+| `clipboard` | Read emails from clipboard (newline- or comma-separated) |
+
+---
 
 ## Email Templates
 
-Templates support these placeholders, replaced per recipient:
+Use these placeholders anywhere in your subject, HTML file, or plain-text body — they are replaced per recipient at send time:
 
-| Placeholder | Value |
+| Placeholder | Replaced with |
 |---|---|
 | `{{.FirstName}}` | Recipient's first name |
 | `{{.LastName}}` | Recipient's last name |
 | `{{.Email}}` | Recipient's email address |
 
-You can supply an HTML file or type plain text inline. Leaving the HTML path blank uses a built-in default template.
+Supply an HTML file path when prompted, or leave it blank to use the built-in default template. Choose plain-text to type or paste the body inline.
+
+---
 
 ## Configuration Profiles
 
-Profiles (SMTP credentials, sender name, subject, template, recipients file, delay) are saved to `sender_config.json` in the working directory. **Do not commit this file** — it is listed in `.gitignore`.
+All profile settings (SMTP host, credentials, sender name, subject, template, recipients file, delay) are stored in `sender_config.json` in the working directory.
+
+**This file is excluded by `.gitignore` and should never be committed.**
 
 ### Dashboard options
 
 | Key | Action |
 |---|---|
-| Number | Load and run that profile |
-| N | Create a new profile |
-| E | Edit an existing profile |
-| R | Rename a profile |
-| D | Delete a profile |
-| V | View profile details |
-| C | Set default Gmail credentials |
-| Q | Quit |
+| `1`–`n` | Load and run that profile |
+| `N` | Create a new profile |
+| `E` | Edit an existing profile |
+| `R` | Rename a profile |
+| `D` | Delete a profile |
+| `V` | View profile details |
+| `C` | Set default Gmail credentials |
+| `Q` | Quit |
+
+---
 
 ## Sending Options
 
-- **Delay** — fixed seconds (`1`) or a random range (`2-5`) between emails
-- **Attachment** — optionally attach a file to every email
-- **Preview** — preview the first rendered email before sending
-- **Retry** — automatically offers to retry failed recipients (up to 2 attempts)
+| Option | Details |
+|---|---|
+| Delay | Fixed seconds (`1`) or a randomised range (`2-5`) between sends |
+| Attachment | Attach any file to every email in the campaign |
+| Preview | Render and review the first email before sending to all |
+| Retry | Automatically prompts to retry failed recipients (up to 2 passes) |
+
+---
 
 ## Output Files
 
-After each campaign two files are written to the working directory:
+Two files are written to the working directory after every campaign:
 
 | File | Contents |
 |---|---|
-| `send_log_YYYYMMDD_HHMMSS.log` | Timestamped log of every send attempt |
-| `results_YYYYMMDD_HHMMSS.csv` | Per-recipient status: `sent`, `failed`, or `skipped` |
+| `send_log_YYYYMMDD_HHMMSS.log` | Full timestamped log of every send attempt |
+| `results_YYYYMMDD_HHMMSS.csv` | Per-recipient result: `sent`, `failed`, or `skipped` |
+
+---
 
 ## Gmail Setup
 
-Gmail requires an [App Password](https://support.google.com/accounts/answer/185833) (not your regular password). Enable 2-Step Verification on your Google Account, then generate an App Password for "Mail".
+Gmail requires an **App Password** — not your regular account password.
+
+1. Enable 2-Step Verification on your Google Account
+2. Go to **Google Account → Security → App Passwords**
+3. Generate a password for "Mail"
+4. Use that 16-character password in smtp-sender
+
+More info: [support.google.com/accounts/answer/185833](https://support.google.com/accounts/answer/185833)
+
+---
 
 ## License
 
